@@ -1,0 +1,365 @@
+options:
+  parameters:
+    author: VHMG
+    catch_exceptions: 'True'
+    category: Custom
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: no_gui
+    hier_block_src_path: '.:'
+    id: pocsag_tx
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: run
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: POCSAG TX
+    window_size: ''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [0, 4.0]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: af_gain
+  id: variable
+  parameters:
+    comment: ''
+    value: '190'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [624, 8.0]
+    rotation: 0
+    state: enabled
+- name: max_deviation
+  id: variable
+  parameters:
+    comment: ''
+    value: '4500.0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 8.0]
+    rotation: 0
+    state: enabled
+- name: pagerfreq
+  id: variable
+  parameters:
+    comment: ''
+    value: '161_125_000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [408, 8.0]
+    rotation: 0
+    state: enabled
+- name: pocsagbitrate
+  id: variable
+  parameters:
+    comment: ''
+    value: '1200'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 8.0]
+    rotation: 0
+    state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '2_000_000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [344, 8.0]
+    rotation: 0
+    state: enabled
+- name: symrate
+  id: variable
+  parameters:
+    comment: ''
+    value: '38400'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [280, 8.0]
+    rotation: 0
+    state: enabled
+- name: tx_gain
+  id: variable
+  parameters:
+    comment: ''
+    value: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [568, 8.0]
+    rotation: 0
+    state: enabled
+- name: analog_frequency_modulator_fc_0
+  id: analog_frequency_modulator_fc
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    sensitivity: 2.0 * np.pi * max_deviation / float(symrate)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [448, 188.0]
+    rotation: 0
+    state: enabled
+- name: blocks_char_to_float_0
+  id: blocks_char_to_float
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    scale: af_gain*0.7/1000
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 188.0]
+    rotation: 0
+    state: enabled
+- name: blocks_repeat_0
+  id: blocks_repeat
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    interp: int(symrate/pocsagbitrate)
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: byte
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [192, 188.0]
+    rotation: 0
+    state: enabled
+- name: iio_pluto_sink_0
+  id: iio_pluto_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    attenuation1: '20'
+    bandwidth: '2_000_000'
+    buffer_size: '32768'
+    comment: ''
+    cyclic: 'False'
+    filter: ''
+    filter_source: '''Auto'''
+    fpass: 5e3
+    frequency: int(pagerfreq)
+    fstop: 6e3
+    len_tag_key: ''
+    samplerate: samp_rate
+    type: fc32
+    uri: ip:192.168.10.1
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [784, 152.0]
+    rotation: 0
+    state: enabled
+- name: import_0
+  id: import
+  parameters:
+    alias: ''
+    comment: ''
+    imports: import numpy as np
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [136, 8.0]
+    rotation: 0
+    state: enabled
+- name: pfb_arb_resampler_xxx_0
+  id: pfb_arb_resampler_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    atten: '100'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nfilts: '16'
+    rrate: float(samp_rate)/float(symrate)
+    samp_delay: '0'
+    taps: ''
+    type: ccf
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [592, 176.0]
+    rotation: 0
+    state: enabled
+- name: pocsag_numeric
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nfrom bitstring import\
+      \ BitArray\n\n\nclass pocsagsender(gr.sync_block):\n    def __CalculateCRCandParity(self,datatype,data):\n\
+      \        cw=data<<11 \n\n        # make leftmost bit \"1\" for datatype 1 (text)\n\
+      \        if datatype == 1:\n            cw |= 0x80000000\n        #end if\n\n\
+      \        local_cw=cw\n\n        for i in range(21):\n            if (cw & 0x80000000)\
+      \ > 0:\n                cw ^= 0xED200000\n            #end if\n            cw\
+      \ <<= 1\n        #end for\n\n        local_cw |= (cw >> 21)\n\n\n        parity=0\n\
+      \        cw=local_cw\n        for i in range(32):\n            if (cw & 0x80000000)\
+      \ > 0:\n                parity += 1\n            #end if\n            cw <<=\
+      \ 1\n        #end for\n\n        # make even parity\n        local_cw += (parity\
+      \ % 2)\n\n        return(local_cw)\n    # end Calculate CRC and Pairy\n\n\n\
+      \    def __createpocsagmsg(self,address,txt):\n\n        # checking input\n\
+      \        if not (0 < address <= 0x1fffff):\n            raise ValueError(address)\n\
+      \        #end if\n\n        if len(txt) >= 21:\n            txt=txt[:20]\n \
+      \           print(f\"Warning, numerical message truncated to 20 digits: {txt}\"\
+      )        \n            #end if\n\n        # init pocsag message\n        # init\
+      \ data\n        # 2 batches\n        # 1 batch = sync codeword + 8 frames\n\
+      \        # 1 frame = 1 codeword\n\n        syncpattern  = 0xAAAAAAAA\n     \
+      \   synccodeword = 0x7cd215d8\n        idlepattern  = 0x7ac9c197\n\n       \
+      \ # init all codewords with idle pattern: 2 batches = 16 frames = 32 codewords\n\
+      \        codeword = [idlepattern for i in range(32)]\n\n        # part 1: address\
+      \ + source \n\n        # parse address and source\n        addressline=address>>3\n\
+      \        addressline<<=2\n        addressline += 0\n        \n        # the\
+      \ message starts at the frame address determined by the last 3 bits of the address\n\
+      \        cwnum = ((address % 8) << 1) # codeword number\n        codeword[cwnum]=self.__CalculateCRCandParity(datatype\
+      \ = 0, data = addressline)\n\n        # part 2: Encode numerical message\n \
+      \       \n        textbits = ''\n        \n        chars = {\n            '0':'0000','1':'1000','2':'0100',\n\
+      \            '3':'1100','4':'0010','5':'1010',\n            '6':'0110','7':'1110','8':'0001',\n\
+      \            '9':'1001','U':'1101','u':'1101',\n            ' ':'0011','-':'1011','_':'1011',\n\
+      \            ']':'0111',')':'0111','}':'0111',\n            '[':'1111','(':'1111','{':'1111',\n\
+      \             }\n              \n        for i in txt:\n            textbits\
+      \ += chars.get(i,'0011')  \n            \n        nbits=len(textbits)\n\n  \
+      \      # 2.4 make the list of bits  a multiple of 20 bits\n        \n      \
+      \  bitstoadd=20-(nbits % 20)\n        \n        if bitstoadd != 20:\n      \
+      \      for i in range(bitstoadd // 4):\n                textbits += '0011' \
+      \         \n        #end if\n\n\n        # 2.5 for every block of 20 bits, calculate\
+      \ crc and parity, and add to codeword\n        ncw = len(textbits)/20 # number\
+      \ of codewords\n\n        startbit=0\n        stopbit=20 # (actually, the 19th\
+      \ bit)\n        for i in range(int(ncw)):\n            thiscw=textbits[startbit:stopbit]\n\
+      \            thiscw_i=int(thiscw,2) # convert list of bits to int\n\n      \
+      \      #move up all pointers\n            startbit=stopbit # stopbit is startbit\
+      \ + 20\n            stopbit += 20\n\n            #codeword pointer\n       \
+      \     cwnum += 1\n\n            # calculate CRC for a text block (datatype =\
+      \ 1)\n            codeword[cwnum]=self.__CalculateCRCandParity(datatype = 1,\
+      \ data = thiscw_i)\n        #end for (number of \n\n\n        # done\n\n   \
+      \     # now create complete pocsag message\n        # sync pattern\n       \
+      \ ret = [syncpattern for i in range(18)]\n        \n        # add sync codeword\
+      \ of 1st batch\n        ret.append(synccodeword)\n\n        # add frames 0 to\
+      \ 7 (i.e. codewords 0 to 15)\n        ret += [codeword[n] for n in range(16)]\n\
+      \n\n        \n        # create add 2nd batch if the text has spilled into the\
+      \ 2nd batch\n        if cwnum >=  16:\n            # long message, 2 batches\n\
+      \            nbatch=2\n\n            # add sync codeword\n            ret.append(synccodeword)\n\
+      \        \n            # and add frames 8 to 15 (i.e. codewords 16 to 31)\n\
+      \            ret += [codeword[n] for n in range(16,32)]\n        else:\n   \
+      \         # short message, 1 batch\n            nbatch=1\n\n        #end else\
+      \ - ifif\n\n\n        return((nbatch,ret))\n\n    # end \"createpocsagmsg\"\n\
+      \n\n    def __init__(self,number=2136, text=\"\"):  # only default arguments\
+      \ here\n        gr.sync_block.__init__(\n            self,\n            name='POCSAG\
+      \ numeric generator',\n            in_sig=[],\n            out_sig=[np.int8]\n\
+      \        )\n\n\n        self.set_output_multiple(640)\n            # pocsag\
+      \ messages are either 1 batch (35 codeword = 120 octets), or 2 batches (52 codewords\
+      \ = 208 octets)\n            # make the stream a little bit longer to fit a\
+      \ multiple of 20 codewords\n            # pocsag message of 1 batch -> add 5\
+      \ cw -> 40 (= 20 * 2) codewords\n            # pocsag message of 2 batches ->\
+      \ add 8 cw -> 60 (=20 *3) codewords\n            # 20 cw = 80 octets = 640 bits\n\
+      \n        self.state = 0\n        self.number= int(number)\n        self.text\
+      \ = text\n        self.source = 0\n\n\n        nbatch,psmsg=self.__createpocsagmsg(number,text)\n\
+      \n        # for a short message (nbtach=1), add 5 octest = 40 bits\n       \
+      \ # for a long message (nbatch=2), add 8 octets = 64 bits\n\n        if nbatch\
+      \ == 1:\n            self.pocsagmsg=[0 for i in range(20)]\n        elif nbatch\
+      \ == 2:\n            self.pocsagmsg=[0 for i in range(32)]\n        else:\n\
+      \            raise ValueError(nbatch)\n        #end if\n            \n\n   \
+      \     for thismsg in psmsg:\n            for c in BitArray(uint=thismsg,length=32).bin:\n\
+      \                self.pocsagmsg.append(1 if c == '1' else -1)\n        #end\
+      \ for\n\n        # now add tail (all 0)\n        if nbatch == 1:\n         \
+      \   self.pocsagmsg+=[0 for i in range(20)]\n        elif nbatch == 2:\n    \
+      \        self.pocsagmsg+=[0 for i in range(32)]\n        else:\n           \
+      \ raise ValueError(nbatch)\n        #end if\n\n        self.msglen=len(self.pocsagmsg)\n\
+      \n    #end __init__\n\n    #def forecast(self, noutput_items, ninput_items_required):\n\
+      \    #\t#setup size of input_items[i] for work call\n    #\tfor i in range(len(ninput_items_required)):\n\
+      \    #\t\tninput_items_required[i] = noutput_items\n\n    def work(self, input_items,\
+      \ output_items):\n\n        if self.state == 0:\n            # state 0 -> send\
+      \ pocsag message \n\n            output_items[0][:self.msglen]=np.array(self.pocsagmsg,\
+      \ dtype=np.int8)\n\n            self.state = 1 # after this, go to sleep \n\
+      \            return self.msglen\n        #end if\n\n        # state 1: sleep\n\
+      \        #time.sleep(self.sleeptime)\n\n        # then go back to state 0 (transmit)\n\
+      \        self.state = 0\n\n        return -1 # return without any data\n   \
+      \ #end work\n# end class \"pocsagsender\"\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    number: ric
+    text: '"02-{246}-4070U"'
+  states:
+    _io_cache: ('POCSAG numeric generator', 'pocsagsender', [('number', '2136'), ('text',
+      "''")], [], [('0', 'byte', 1)], '', ['number', 'text'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [16, 184.0]
+    rotation: 0
+    state: enabled
+- name: ric
+  id: parameter
+  parameters:
+    alias: ''
+    comment: ''
+    hide: none
+    label: RIC
+    short_id: R
+    type: intx
+    value: '548579'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [680, 8.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [analog_frequency_modulator_fc_0, '0', pfb_arb_resampler_xxx_0, '0']
+- [blocks_char_to_float_0, '0', analog_frequency_modulator_fc_0, '0']
+- [blocks_repeat_0, '0', blocks_char_to_float_0, '0']
+- [pfb_arb_resampler_xxx_0, '0', iio_pluto_sink_0, '0']
+- [pocsag_numeric, '0', blocks_repeat_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.11.0
