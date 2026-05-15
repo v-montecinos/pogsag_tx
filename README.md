@@ -3,7 +3,6 @@
 GNU Radio flow graph that transmits **POCSAG numeric** pager messages over the air using an [ADALM-Pluto](https://www.analog.com/en/design-center/evaluation-hardware-and-software/evaluation-boards-kits/adalm-pluto.html) SDR.
 <video width="640" height="360" controls>
   <source src="pocsag_tx.mov" type="video/mp4">
-  Your browser does not support the video tag.
 </video>
 **License:** GPL-3.0  
 **Author:** VHMG  
