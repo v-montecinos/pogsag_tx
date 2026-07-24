@@ -61,7 +61,7 @@ class pocsagsender(gr.sync_block):
 
         syncpattern  = 0xAAAAAAAA
         synccodeword = 0x7cd215d8
-        idlepattern  = 0x7ac9c197
+        idlepattern  = 0x7A89C197
 
         # init all codewords with idle pattern: 2 batches = 16 frames = 32 codewords
         codeword = [idlepattern for i in range(32)]
