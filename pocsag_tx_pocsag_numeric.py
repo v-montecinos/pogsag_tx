@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from gnuradio import gr
 from bitstring import BitArray
 
@@ -88,6 +89,7 @@ class pocsagsender(gr.sync_block):
             ' ':'0011','-':'1011','_':'1011',
             ']':'0111',')':'0111','}':'0111',
             '[':'1111','(':'1111','{':'1111',
+            '*':'0101'
              }
               
         for i in txt:
@@ -123,6 +125,7 @@ class pocsagsender(gr.sync_block):
 
             # calculate CRC for a text block (datatype = 1)
             codeword[cwnum]=self.__CalculateCRCandParity(datatype = 1, data = thiscw_i)
+            
         #end for (number of 
 
 
@@ -190,7 +193,7 @@ class pocsagsender(gr.sync_block):
         # for a long message (nbatch=2), add 8 octets = 64 bits
 
         if nbatch == 1:
-            self.pocsagmsg=[0 for i in range(20)]
+            self.pocsagmsg=[0 for i in range(32)]
         elif nbatch == 2:
             self.pocsagmsg=[0 for i in range(32)]
         else:
@@ -203,9 +206,9 @@ class pocsagsender(gr.sync_block):
                 self.pocsagmsg.append(1 if c == '1' else -1)
         #end for
 
-        # now add tail (all 0)
+        #now add tail (all 0)
         if nbatch == 1:
-            self.pocsagmsg+=[0 for i in range(20)]
+            self.pocsagmsg+=[0 for i in range(32)]
         elif nbatch == 2:
             self.pocsagmsg+=[0 for i in range(32)]
         else:
@@ -227,7 +230,7 @@ class pocsagsender(gr.sync_block):
             # state 0 -> send pocsag message 
 
             output_items[0][:self.msglen]=np.array(self.pocsagmsg, dtype=np.int8)
-
+                    
             self.state = 1 # after this, go to sleep 
             return self.msglen
         #end if
